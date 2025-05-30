@@ -1,0 +1,15 @@
+flask
+python-dotenv
+PyMuPDF
+pdf2image
+pytesseract
+Pillow
+langchain
+langchain-huggingface
+langchain-google-genai
+langchain-community
+sentence-transformers
+faiss-cpu
+google-generativeai
+google-ai-generativelanguage
+gunicorn

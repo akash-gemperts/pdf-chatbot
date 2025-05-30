@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Railway PDF Chatbot</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --primary: #6366f1;
+      --bg: #f4f5f7;
+      --dark-bg: #1f1f1f;
+      --sidebar-bg: #ffffff;
+      --chat-bg: #ffffff;
+      --dark-sidebar: #2c2c2c;
+      --dark-chat: #121212;
+      --text: #111827;
+      --text-dark: #f9f9f9;
+      --bot-bubble: #e5e7eb;
+      --radius: 12px;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: var(--bg);
+      color: var(--text);
+      transition: all 0.3s ease;
+    }
+
+    .dark-mode {
+      background: var(--dark-bg);
+      color: var(--text-dark);
+    }
+
+    header {
+      background: var(--primary);
+      color: white;
+      padding: 1rem 1.5rem;
+      font-size: 1.2rem;
+      font-weight: 600;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: relative;
+    }
+
+    .hamburger {
+      font-size: 1.2rem;
+      cursor: pointer;
+      margin-right: 16px;
+      background: none;
+      border: none;
+      color: white;
+    }
+
+    .layout {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+    }
+
+    .sidebar {
+      width: 250px;
+      background: var(--sidebar-bg);
+      padding: 1rem;
+      border-right: 1px solid #ddd;
+      overflow-y: auto;
+      transition: transform 0.3s ease;
+    }
+
+    .sidebar.hidden {
+      transform: translateX(-100%);
+    }
+
+    .dark-mode .sidebar {
+      background: var(--dark-sidebar);
+      border-color: #444;
+    }
+
+    .chat {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: var(--chat-bg);
+    }
+
+    .dark-mode .chat {
+      background: var(--dark-chat);
+    }
+
+    .chat-messages {
+      flex: 1;
+      padding: 1.5rem;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .message {
+      padding: 14px 16px;
+      border-radius: var(--radius);
+      max-width: 70%;
+      font-size: 15px;
+      line-height: 1.5;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+    }
+
+    .user {
+      align-self: flex-end;
+      background: var(--primary);
+      color: white;
+      border-bottom-right-radius: 0;
+    }
+
+    .bot {
+      align-self: flex-start;
+      background: var(--bot-bubble);
+      border-bottom-left-radius: 0;
+    }
+
+    .dark-mode .bot {
+      background: #2f2f2f;
+      color: white;
+    }
+
+    .chat-input {
+      display: flex;
+      padding: 1rem;
+      border-top: 1px solid #ddd;
+      background: white;
+      gap: 1rem;
+    }
+
+    .dark-mode .chat-input {
+      background: #2a2a2a;
+      border-color: #444;
+    }
+
+    input[type='text'] {
+      flex: 1;
+      padding: 0.8rem;
+      border-radius: var(--radius);
+      border: 1px solid #ccc;
+      font-size: 15px;
+    }
+
+    .dark-mode input[type='text'] {
+      background: #3a3a3a;
+      color: white;
+      border-color: #555;
+    }
+
+    button {
+      padding: 0 20px;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: var(--radius);
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .toggle-btn {
+      font-size: 0.8rem;
+      padding: 6px 12px;
+      background: transparent;
+      border: 1px solid white;
+      border-radius: 16px;
+      color: white;
+      cursor: pointer;
+    }
+
+    ul#pdfList {
+      padding-left: 1rem;
+      margin-top: 1rem;
+      font-size: 0.9rem;
+    }
+
+    ul#pdfList li {
+      margin-bottom: 8px;
+    }
+
+    @media screen and (max-width: 768px) {
+      .sidebar {
+        position: absolute;
+        top: 64px;
+        left: 0;
+        height: calc(100% - 64px);
+        z-index: 10;
+      }
+
+      .dark-mode .sidebar {
+        background: var(--dark-sidebar);
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div style="display: flex; align-items: center;">
+      <button class="hamburger" onclick="toggleSidebar()">☰</button>
+      Railway PDF Chatbot
+    </div>
+    <button class="toggle-btn" onclick="document.body.classList.toggle('dark-mode')">Toggle Mode</button>
+  </header>
+
+  <div class="layout">
+    <div class="sidebar" id="sidebar">
+      <h3>Uploaded PDFs</h3>
+      <ul id="pdfList"></ul>
+    </div>
+
+    <div class="chat">
+      <div class="chat-messages" id="chat-box"></div>
+      <div class="chat-input">
+        <input type="text" id="message" placeholder="Type your question..." onkeydown="if(event.key==='Enter')sendMessage()">
+        <button onclick="sendMessage()">Send</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function toggleSidebar() {
+      document.getElementById('sidebar').classList.toggle('hidden');
+    }
+
+    async function fetchPDFList() {
+      const res = await fetch('/pdfs');
+      const files = await res.json();
+      const list = document.getElementById("pdfList");
+      list.innerHTML = "";
+      files.forEach(file => {
+        const li = document.createElement("li");
+        li.textContent = file;
+        list.appendChild(li);
+      });
+    }
+
+    async function sendMessage() {
+      const input = document.getElementById("message");
+      const chatBox = document.getElementById("chat-box");
+      const text = input.value.trim();
+      if (!text) return;
+
+      const userDiv = document.createElement("div");
+      userDiv.className = "message user";
+      userDiv.innerHTML = text;
+      chatBox.appendChild(userDiv);
+      input.value = "";
+      chatBox.scrollTop = chatBox.scrollHeight;
+
+      const loading = document.createElement("div");
+      loading.className = "message bot";
+      loading.innerText = "Typing...";
+      chatBox.appendChild(loading);
+      chatBox.scrollTop = chatBox.scrollHeight;
+
+      try {
+        const res = await fetch("/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: text }),
+        });
+
+        const data = await res.json();
+        loading.remove();
+
+        const botDiv = document.createElement("div");
+        botDiv.className = "message bot";
+        botDiv.innerHTML = data.response || data.error || "No response";
+        chatBox.appendChild(botDiv);
+        chatBox.scrollTop = chatBox.scrollHeight;
+      } catch (e) {
+        loading.remove();
+        const errorDiv = document.createElement("div");
+        errorDiv.className = "message bot";
+        errorDiv.innerText = "Something went wrong.";
+        chatBox.appendChild(errorDiv);
+      }
+    }
+
+    fetchPDFList();
+  </script>
+
+</body>
+</html>
